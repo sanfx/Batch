@@ -1,0 +1,15 @@
+<RCC>
+  <qresource prefix="images">
+    <file>convert.png</file>
+    <file>convert.jpg</file>
+    <file>delete-icon-large.gif</file>
+    <file>icon_maya-small.png</file>
+    <file>icon_movedown.gif</file>
+    <file>icon_moveup.gif</file>
+    <file>maya_icon.jpg</file>
+    <file>nuke.png</file>
+    <file>nuke_icon.png</file>
+    <file>shake-icon.png</file>
+    <file>Snowball-icon.png</file>
+  </qresource>
+</RCC>
