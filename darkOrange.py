@@ -10,7 +10,9 @@ class DarkOrange(QtGui.QFrame):
             styleFile=os.path.join(os.path.split(__file__)[0],"darkorange.stylesheet")
             with open(styleFile,"r") as fh:
                   self.setStyleSheet(fh.read())
-
+      def alwaysOnTop(self):
+            self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowStaysOnTopHint) 
+            self.show()
       def mousePressEvent(self, event):
             self.offset = event.pos()
 

@@ -56,6 +56,7 @@ class Window(DarkOrange):
         self.settingFile = settingFilePath.settingFile()
 
         # set the default file filter
+        #self.openfileFilters="All Image Formats(*.jpg *.png *.tiff *.gif *.tga *.cgi *.dpx);;"  
         self.openfileFilters="All Supported(*.ma *.mb *.nk);; Maya Ascii(*.ma);; Maya Binary( *.mb );; Nuke Script( *.nk ) ;; All Image Formats( *.jpg *.png *.tiff *.gif *.tga *.cgi *.dpx)"   
 
         self.items = self.readSettingFile()[1]
@@ -96,11 +97,20 @@ class Window(DarkOrange):
             self.camlbl.setText("Write node")
             self.savNkScrptAction.setEnabled(True)
         elif self.convtChkbox.checkState() == QtCore.Qt.Checked:
+            self.directory = self.readSettingFile()[3]
             self.openfileFilters="All Image Formats(*.jpg *.png *.tiff *.gif *.tga *.cgi *.dpx);;"   
             self.label.setText("Image Sequence")
             self.rndCB.setEnabled(False)
             self.camCB.setEnabled(False)
-
+    
+    def convtImgSeq(self):
+        if os.path.splitext(fileToOpen)[-1] in [".jpg", ".gif",".png"]:
+            print "Image Selected"   
+            
+            #imgcvt -n 1 50 1 shot@@.jpg shot.@@@@.jpg            
+        #print 
+        pass
+    
     def prepSetFile(self):
         """This method updates data structure for saving"""
         self.defaultBatDir=str(self.batDirEdt.text())
@@ -356,10 +366,7 @@ class Window(DarkOrange):
         vbox.addWidget(self.statusbar)
         self.setLayout(vbox)
         
-    def alwaysOnTop(self):
-        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowStaysOnTopHint) 
-        self.show()
-    
+   
     def savNkScript(self):
         if str(self.scnFilePath.text()).endswith(".nk"):
             if self.isSettingChanged():
@@ -484,6 +491,11 @@ class Window(DarkOrange):
         if self.nukechkBox.isChecked() and (ext == '.nk'):
             self.isSettingChanged()
             self.updSavNukeScrpt()## save the Nuke script with new values
+        if self.convtChkbox.isChecked() and (ext in [".jpg", ".gif",".png"]):
+            print "Beginning Image Sequence Conversion."
+            imgcvt = self.readSettingFile()[1]['imgcvt']
+            
+            os.chdir(os.path.split(imgcvt)[0])
         buildCrntTime = str(now.hour) +"_" + str(now.minute)
         selected   = str(self.scnFilePath.text())
         quikBatNam = os.path.basename(selected).split(".")[0]+"_"+buildCrntTime+".bat"
@@ -491,12 +503,14 @@ class Window(DarkOrange):
             self.batfiletoSave = os.path.join(os.path.split(selected)[0],quikBatNam)
             self.task = str(self.makeBatTask())
         else: self.batfiletoSave = os.path.join(self.batsDir,buildCrntTime+".bat")
-        try:
-            writeBat=open(self.batfiletoSave,'w')
-            writeBat.write(self.task)
-            self.execRender()
-        except Exception as er: print er
-        finally: writeBat.close()
+        if self.task != None:
+            try:
+                writeBat=open(self.batfiletoSave,'w')
+                writeBat.write(self.task)
+                self.execRender()
+            except Exception as er: print er
+            finally: writeBat.close()
+
         #self.statusbar.showMessage("preparing to render with modified settings.",3000)
     
     def updSavNukeScrpt(self):
@@ -548,6 +562,7 @@ class Window(DarkOrange):
                     else:
                         self.nukeData = nukeData
                         self.fillNukeData()
+            
             self.bgnBatRndBtn.setFocus(True)
 
     def fillNukeData(self):
@@ -665,6 +680,7 @@ class Window(DarkOrange):
         self.btnPressed=btnPressed
             # this block is for file mode
         if self.btnPressed != self.rdBtn:
+
             fname=str(QtGui.QFileDialog.getOpenFileName(self,'Open File',self.directory,self.tr(self._fileFilters)))
 
             if self.btnPressed == self.browseBtn: self.scnFilePath.setText(fname)
