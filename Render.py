@@ -2,8 +2,8 @@ from PyQt4 import QtCore,QtGui
 from darkOrange import DarkOrange
 from images import resource_ui
 from functools import partial
-import sys,os,subprocess
-import pickle,json
+import sys,os,subprocess,re
+import pickle,json,string
 import ast,datetime
 import settingFilePath
 
@@ -37,7 +37,7 @@ class Window(DarkOrange):
         self.updEf = ""      # updateNukeScript()
         self.updFmt = ""
         self.updChnl = ""
-        
+
         self.css=("""
                     QPushButton {
                                 font-size: 12px;
@@ -64,7 +64,7 @@ class Window(DarkOrange):
         self.createUI()
 
         self.setting=self.readSettingFile()
-        
+
         self.nukePathApp = self.setting[5]
         self.batsDir=os.path.expanduser('~')
         self.getSelectedRendertype()
@@ -81,7 +81,7 @@ class Window(DarkOrange):
 
     def getSelectedRendertype(self):
         if self.mayachkBox.checkState() == QtCore.Qt.Checked:
-         
+
             self.directory=self.readSettingFile()[3]
             self.label.setText("Maya Scene File")
             self.rndCB.setEnabled(True)
@@ -89,7 +89,7 @@ class Window(DarkOrange):
             self.camlbl.setText("Camera to Render")
             self.savNkScrptAction.setEnabled(False)
         elif self.nukechkBox.checkState() == QtCore.Qt.Checked:
-        
+
             self.directory=str(self.setting[4])
             self.label.setText("Nuke Script File")
             self.rndCB.setEnabled(False)
@@ -102,15 +102,33 @@ class Window(DarkOrange):
             self.label.setText("Image Sequence")
             self.rndCB.setEnabled(False)
             self.camCB.setEnabled(False)
-    
+
+    def numToSplChar(self,s, chars):
+        return re.sub('[%s]' % chars, '#', s).lower() 
+
     def convtImgSeq(self):
-        if os.path.splitext(fileToOpen)[-1] in [".jpg", ".gif",".png"]:
-            print "Image Selected"   
-            
+        
+        convertFrom = str(self.scnFilePath.text())
+        convertTo = str(self.renDir.text())
+        convertToformat = str(self.fmtCB.currentText())
+        imgcvtPath = self.readSettingFile()[1]['imgcvt']
+        os.chdir(os.path.split(imgcvtPath)[0]) 
+        fileLocation = os.path.split(str(self.scnFilePath.text()))[0]
+        fileName =  os.path.split(str(self.scnFilePath.text()))[-1]
+        #print str(fileName).split(".")[0]+"."+ str(self.fmtCB.currentText()).lower(), fileLocation
+        imgcvt = os.path.split(imgcvtPath)[-1] + " -n "  + self.sfEdt.text() + " " + self.efEdt.text() + " " + self.byfrEdt.text() + " " + self.scnFilePath.text() + " " + self.renDir.text()
+
+        if all([self.sfEdt.text(),self.efEdt.text(), self.byfrEdt.text()]):
+            print "Beginning Image Sequence Conversion."
+            print "Executing" , str(imgcvt)
+            os.system(str(imgcvt))
+
+        else: QtGui.QMessageBox.warning(self, "Error","Make Sure you filled in start sequence and end of number of file you want convert.")
+                                        #"Start sequence: %s \n End Sequence: %s \n Increment By: %s" %(str(self.sfEdt.text())),str(self.efEdt.text()),str(self.byfrEdt.text()))
+
+        #launch = subprocess.Popen()
             #imgcvt -n 1 50 1 shot@@.jpg shot.@@@@.jpg            
-        #print 
-        pass
-    
+
     def prepSetFile(self):
         """This method updates data structure for saving"""
         self.defaultBatDir=str(self.batDirEdt.text())
@@ -171,8 +189,8 @@ class Window(DarkOrange):
         ntitleBar.addStretch(1)
         ntitleBar.addWidget(miniBtn)
         ntitleBar.addWidget(closeBtn)
-        
-       
+
+
         #add my checkboxes to select render type task
         self.mayachkBox = QtGui.QCheckBox()
         #self.mayachkBox.setCheckState(QtCore.Qt.Checked)
@@ -193,7 +211,7 @@ class Window(DarkOrange):
         self.convtChkbox.setIcon(QtGui.QIcon(fmtconvtIcon))
         self.convtChkbox.setIconSize(QtCore.QSize(28,28))
         self.convtChkbox.setCheckState(QtCore.Qt.Checked)
-        
+
 
         chkboxLayout.addStretch(1)
         chkboxLayout.addWidget(self.convtChkbox)
@@ -207,7 +225,6 @@ class Window(DarkOrange):
         self.chkBoxGrp.addButton(self.convtChkbox)
         self.chkBoxGrp.addButton(self.mayachkBox)
         self.chkBoxGrp.addButton(self.nukechkBox)
-        
 
         # initialize tab widget
         tab_widget = QtGui.QTabWidget()
@@ -345,7 +362,6 @@ class Window(DarkOrange):
         self.rdBtn.clicked.connect(rndPath)
         self.scnFilePath.textChanged.connect(self.execApp)
         self.camCB.currentIndexChanged.connect(self.selWriteNode)
-        #self.camCB.activated.connect(self.setSelWriteNode)
         self.bgnBatRndBtn.clicked.connect(self.writeBatFile)
 
         # add layouts that contain inside of tab1 widgets
@@ -356,7 +372,7 @@ class Window(DarkOrange):
         p1_vertical.addWidget(hLine)
         p1_vertical.addLayout(nxtbtnbox)
         self.secondTabContent()
-       
+
         vbox = QtGui.QVBoxLayout()
         vbox.setMargin(0)
         vbox.addLayout(ntitleBar)
@@ -365,14 +381,13 @@ class Window(DarkOrange):
         vbox.addWidget(tab_widget)
         vbox.addWidget(self.statusbar)
         self.setLayout(vbox)
-        
-   
+
     def savNkScript(self):
         if str(self.scnFilePath.text()).endswith(".nk"):
             if self.isSettingChanged():
                 self.updSavNukeScrpt()
             else: self.statusbar.showMessage("Nothing to save.",2000)
-   
+
     def changePriority(self,direction):
         """ Reorder the items in the listWidget """
         crntRow = newrow = self.listWidget.currentRow()
@@ -388,7 +403,7 @@ class Window(DarkOrange):
             crntItem=self.listWidget.takeItem(crntRow)
             self.listWidget.insertItem(newrow,crntItem)
             self.listWidget.setCurrentItem(crntItem)
-            
+
     def prevInNuke(self):
         os.chdir(os.path.split(self.nukePathApp)[0])# takes away dependency of having nuke full licence
         nukeApp = os.path.split(self.nukePathApp)[-1]        
@@ -398,7 +413,7 @@ class Window(DarkOrange):
             fileName = str(self.renDir.text()) +" " +stFrm +" " +enFrm
             launch  = nukeApp + " -v " +fileName
             self.execProces(launch)
-        
+
     def prevInFcheck(self):
         os.chdir(os.path.split(self.items['imgcvt'])[0])
         if self.renDir.text():
@@ -407,10 +422,10 @@ class Window(DarkOrange):
             fileName = "fcheck -n "+ stFrm + " " + enFrm + " " + str(self.byfrEdt.text()) + " " + str(self.renDir.text())
             fileName = str(fileName).replace("#","@").replace("\'",os.path.sep)
             self.execProces(fileName)
-                  
+
     def execProces(self,launch):
         return subprocess.Popen(launch,shell=True,stdout=subprocess.PIPE)  
-    
+
     def makeBatFile(self):
         text=""
         for each in xrange(self.listWidget.count()):
@@ -442,7 +457,7 @@ class Window(DarkOrange):
 
                 # print "Please select the Nuke Script, currenly selected\
     #file is: %s"% os.path.split(str(self.scnFilePath.text()))[-1]
-    
+
     def isSettingChanged(self):
         lst = self.nukeData[str(self.selectedItem)]
         ext = os.path.splitext(str(self.scnFilePath.text()))[-1]
@@ -451,13 +466,13 @@ class Window(DarkOrange):
             if updSf != int(lst[0]):
                 self.updSf = updSf
             else: self.updSf = int(lst[0])
-                
+
             updEf = int(self.efEdt.text())
             if updEf != int(lst[1]):
                 self.updEf = updEf
             else: self.updEf = int(lst[1])
             updBf = int(self.byfrEdt.text())
-    
+
             #if updBf != int(lst[2]):
                 #self.updBf = updBf
             updRnDir = str(self.renDir.text())
@@ -469,7 +484,7 @@ class Window(DarkOrange):
             if updFmt != str(lst[3]):
                 self.updFmt =updFmt
             else: self.updFmt = lst[3]
-            
+
                 #print "Format changed to %s." %self.updFmt
             #updChnl = str(lst[4])
             if self.rgbchkBox.checkState() == QtCore.Qt.Checked:
@@ -480,7 +495,7 @@ class Window(DarkOrange):
                 self.updChnl = "rgba"
             else: self.updChnl = "rgba"
             return [self.updSf,self.updEf,self.updFmt]
-          
+
     def writeBatFile(self,do = "single",task = None):
         if str(self.scnFilePath.text()).endswith(".nk"):
             os.chdir(os.path.split(self.nukePathApp)[0])# takes away dependency of having nuke full licence
@@ -492,10 +507,9 @@ class Window(DarkOrange):
             self.isSettingChanged()
             self.updSavNukeScrpt()## save the Nuke script with new values
         if self.convtChkbox.isChecked() and (ext in [".jpg", ".gif",".png"]):
-            print "Beginning Image Sequence Conversion."
-            imgcvt = self.readSettingFile()[1]['imgcvt']
-            
-            os.chdir(os.path.split(imgcvt)[0])
+            #initate image sequence conversion , make sure image file name has right convention
+            self.convtImgSeq()
+
         buildCrntTime = str(now.hour) +"_" + str(now.minute)
         selected   = str(self.scnFilePath.text())
         quikBatNam = os.path.basename(selected).split(".")[0]+"_"+buildCrntTime+".bat"
@@ -503,7 +517,8 @@ class Window(DarkOrange):
             self.batfiletoSave = os.path.join(os.path.split(selected)[0],quikBatNam)
             self.task = str(self.makeBatTask())
         else: self.batfiletoSave = os.path.join(self.batsDir,buildCrntTime+".bat")
-        if self.task != None:
+
+        if not self.convtChkbox.isChecked():
             try:
                 writeBat=open(self.batfiletoSave,'w')
                 writeBat.write(self.task)
@@ -511,8 +526,6 @@ class Window(DarkOrange):
             except Exception as er: print er
             finally: writeBat.close()
 
-        #self.statusbar.showMessage("preparing to render with modified settings.",3000)
-    
     def updSavNukeScrpt(self):
         filetoUpdate = str(self.scnFilePath.text())
         updateNukeScript = os.path.join(os.path.split(self.absPath)[0],"updateNukeScript.py")
@@ -562,7 +575,7 @@ class Window(DarkOrange):
                     else:
                         self.nukeData = nukeData
                         self.fillNukeData()
-            
+
             self.bgnBatRndBtn.setFocus(True)
 
     def fillNukeData(self):
@@ -683,7 +696,14 @@ class Window(DarkOrange):
 
             fname=str(QtGui.QFileDialog.getOpenFileName(self,'Open File',self.directory,self.tr(self._fileFilters)))
 
-            if self.btnPressed == self.browseBtn: self.scnFilePath.setText(fname)
+            if self.btnPressed == self.browseBtn:
+                if self.convtChkbox.isChecked():
+                    fileLocation = os.path.split(fname)[0]
+                    #fileName =  os.path.split(fname)[-1]                    
+                    #fileName = self.numToSplChar(fileName, string.digits)
+                    
+                    self.renDir.setText(os.path.join(fileLocation,str(fname).split(".")[0]+"."+ str(self.fmtCB.currentText()).lower()))
+                self.scnFilePath.setText(fname)
 
         else: # this block is for directory mode
             if self.nukechkBox.isChecked() and (self.btnPressed==self.rdBtn):
@@ -782,23 +802,23 @@ class Window(DarkOrange):
         movDnBtn.clicked.connect(downSlot)
         delBtn.clicked.connect(self.removeItem)
         self.batRndBtn.clicked.connect(self.makeBatFile)
-        
+
     def locateMelFile(self):
         """Locate the createImageFormat.mel file"""
         return QtGui.QFileDialog.getOpenFileName(self,'Open File',self.userDir,self.tr("Mel Script( *.mel )"))#,self.directory,self.tr("Mel Script( *.mel )"))
-        
+
     def settingWindow(self):
         from settingWinUI import SettingWindow
         dialog = SettingWindow()
         dialog.exec_()
-    
+
     def readImageFormats(self):
         melFile="scripts/others/createImageFormats.mel"
         phile = os.path.join(os.path.split(os.path.split(self.readSettingFile()[1]['Maya Executable'])[0])[0],melFile)
-        
+
         if not os.path.isfile(phile):
             phile = self.locateMelFile()
-        
+
         imageFormatIndex={}
         try:
             read_phile=open(phile,"r")
@@ -825,7 +845,7 @@ def run():
     win.show()
     win.raise_()
     sys.exit(app.exec_()) 
-    
+
 if __name__ =='__main__':    
     app = QtGui.QApplication(sys.argv)
     settingFile = settingFilePath.settingFile()
