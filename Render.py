@@ -57,7 +57,7 @@ class Window(DarkOrange):
 
         # set the default file filter
         #self.openfileFilters="All Image Formats(*.jpg *.png *.tiff *.gif *.tga *.cgi *.dpx);;"  
-        self.openfileFilters="All Supported(*.ma *.mb *.nk);; Maya Ascii(*.ma);; Maya Binary( *.mb );; Nuke Script( *.nk ) ;; All Image Formats( *.jpg *.jpeg *.png *.tiff *.gif *.tga *.cgi *.dpx *.cin)"   
+        self.openfileFilters="All Supported(*.ma *.mb *.nk);; Maya Ascii(*.ma);; Maya Binary( *.mb );; Nuke Script( *.nk ) ;; All Image Formats( *.jpg *.png *.tiff *.gif *.tga *.cgi *.dpx)"   
 
         self.items = self.readSettingFile()[1]
 
@@ -89,6 +89,7 @@ class Window(DarkOrange):
             self.camlbl.setText("Camera to Render")
             self.savNkScrptAction.setEnabled(False)
         elif self.nukechkBox.checkState() == QtCore.Qt.Checked:
+
             self.directory=str(self.setting[4])
             self.label.setText("Nuke Script File")
             self.rndCB.setEnabled(False)
@@ -120,10 +121,8 @@ class Window(DarkOrange):
         if all([self.sfEdt.text(),self.efEdt.text(), self.byfrEdt.text()]):
             print "Beginning Image Sequence Conversion."
             print "Executing" , str(imgcvt)
-            mv = os.system(str(imgcvt))
-            if mv == 0:
-                print "Finished converting."
-            
+            os.system(str(imgcvt))
+
         else: QtGui.QMessageBox.warning(self, "Error","Make Sure you filled in start sequence and end of number of file you want convert.")
                                         #"Start sequence: %s \n End Sequence: %s \n Increment By: %s" %(str(self.sfEdt.text())),str(self.efEdt.text()),str(self.byfrEdt.text()))
 
@@ -546,12 +545,9 @@ class Window(DarkOrange):
         fileName = readFile+" " + fileToOpen
         if fileToOpen:
             if os.path.splitext(fileToOpen)[-1] in ['.ma','.mb']:
-                #if os.getcwd() != os.path.split(self.absPath)[0]:
-                    #os.chdir(os.path.split(self.absPath)[0]) 
-                # run mayapy from specified location
-                os.chdir(os.path.split(self.readSettingFile()[1]['Mayapy Interpreter'])[0])# takes away dependency of setting environment variables
+                if os.getcwd() != os.path.split(self.absPath)[0]:# run mayapy from specified location
+                    os.chdir(os.path.split(self.absPath)[0]) # takes away dependency of setting environment variables
                 mayapy  = os.path.split(self.readSettingFile()[1]['Mayapy Interpreter'])[-1]
-
                 launch  = mayapy+" "+ fileName
                 process = subprocess.Popen(launch, shell=True, stdout=subprocess.PIPE)
                 process.wait()
@@ -695,9 +691,9 @@ class Window(DarkOrange):
     def showFileDialog(self,btnPressed,fileFilters=""):
         self._fileFilters=fileFilters
         self.btnPressed=btnPressed
-           
+            # this block is for file mode
         if self.btnPressed != self.rdBtn:
-             # this block is for file mode
+
             fname=str(QtGui.QFileDialog.getOpenFileName(self,'Open File',self.directory,self.tr(self._fileFilters)))
 
             if self.btnPressed == self.browseBtn:
