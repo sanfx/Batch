@@ -1,0 +1,88 @@
+#! E:/Program Files/Nuke6.1v3/Nuke6.1.exe -nx
+version 6.1 v3
+define_window_layout_xml {<?xml version="1.0" encoding="UTF-8"?>
+<layout version="1.0">
+    <window x="-8" y="-8" w="1296" h="786" screen="0">
+        <splitter orientation="1">
+            <split size="808"></split>
+            <splitter orientation="1">
+                <split size="40"></split>
+                <dock id="" hideTitles="1" activePageId="Toolbar.1">
+                    <page id="Toolbar.1"></page>
+                </dock>
+                <split size="764"></split>
+                <splitter orientation="2">
+                    <split size="359"></split>
+                    <dock id="" activePageId="Viewer.1">
+                        <page id="Viewer.1"></page>
+                    </dock>
+                    <split size="358"></split>
+                    <dock id="" activePageId="DAG.1">
+                        <page id="DAG.1"></page>
+                        <page id="Curve Editor.1"></page>
+                    </dock>
+                </splitter>
+            </splitter>
+            <split size="468"></split>
+            <dock id="" activePageId="Properties.1">
+                <page id="Properties.1"></page>
+            </dock>
+        </splitter>
+    </window>
+</layout>
+}
+Root {
+ inputs 0
+ name E:/Dropbox/Research_Study/myprojects/Batch/test_project_nuke/sign_board.nk
+ first_frame 0
+ last_frame 136
+ lock_range true
+ format "2048 1556 0 0 2048 1556 1 2K_Super_35(full-ap)"
+ proxy_type scale
+ proxy_format "1024 778 0 0 1024 778 1 1K_Super_35(full-ap)"
+}
+ColorWheel {
+ inputs 0
+ gamma 0.45
+ name ColorWheel1
+ xpos -249
+ ypos -162
+}
+Write {
+ file C:/Users/san/Modeler/
+ file_type png
+ last 12
+ use_limit true
+ checkHashOnRead false
+ name Write1
+ xpos -249
+ ypos 55
+}
+Read {
+ inputs 0
+ file E:/Dropbox/Research_Study/myprojects/Batch/images/product_hero_86.jpg
+ format "676 380 0 0 676 380 1 "
+ name Read1
+ selected true
+ xpos -53
+ ypos -169
+}
+Write {
+ channels rgba
+ file E:/Dropbox/Research_Study/myprojects/Batch/test_project_nuke/test_render/testImg_###.jpeg
+ file_type jpeg
+ last 16
+ use_limit true
+ checkHashOnRead false
+ version 6
+ name Write2
+ xpos -53
+ ypos -37
+}
+Viewer {
+ inputs 2
+ input_process false
+ name Viewer1
+ xpos -54
+ ypos 71
+}
