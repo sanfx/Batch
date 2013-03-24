@@ -40,7 +40,7 @@ sign_board.nk
 *.suo
 *.user
 *.sln.docstates
-
+commit_to_disk
 # Build results
 [Dd]ebug/
 [Rr]elease/
