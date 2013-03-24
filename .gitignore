@@ -24,11 +24,11 @@ screenshot_link.txt
 Keyboard
 # CDT-specific
 .cproject
-
+sign_board.nk
 # PDT-specific
 .buildpath
 
-
+.gitignore
 #################
 ## Visual Studio
 #################
