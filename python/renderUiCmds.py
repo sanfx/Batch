@@ -37,6 +37,9 @@ def changePriority(self,direction):
 class Priority(QtGui.QtMainWindow):
 
 	def __init__(self,direction):
+		
+		super(Priority, self).__init__()
+
 		self.__direction = direction
 		crntRow = newrow = self.listWidget.currentRow()
 		total   = self.listWidget.count()
